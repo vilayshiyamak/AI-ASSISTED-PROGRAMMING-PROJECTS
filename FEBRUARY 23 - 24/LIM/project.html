@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold-Formed Metal Purlin Designer - NSCP</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0f3460;
+            --secondary: #16a085;
+            --accent: #e74c3c;
+            --light-bg: #ecf0f1;
+            --dark-text: #2c3e50;
+            --border: #bdc3c7;
+            --success: #27ae60;
+            --warning: #f39c12;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-text);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a4d7a 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            border-bottom: 4px solid var(--secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 3px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.95;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-pdf {
+            background: #d32f2f;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .btn-pdf:hover {
+            background: #b71c1c;
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.3fr;
+            gap: 0;
+        }
+
+        .section-panel {
+            padding: 25px;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+        }
+
+        .section-panel:last-child {
+            border-right: none;
+            background: #f8f9fa;
+        }
+
+        /* Diagram Panel */
+        .diagram-panel {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+            padding: 20px;
+        }
+
+        .diagram-title {
+            color: var(--primary);
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .diagram-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .roof-diagram {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .section-diagram {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+        }
+
+        .diagram-label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 3px;
+            height: 20px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--dark-text);
+            font-size: 0.9em;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            gap: 8px;
+            align-items: end;
+        }
+
+        .unit-label {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            font-weight: 500;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 0.95em;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .btn-reset {
+            background: var(--border);
+            color: var(--dark-text);
+            width: 100%;
+        }
+
+        .btn-reset:hover {
+            background: #a9aeb2;
+        }
+
+        /* Results Panel */
+        .result-section {
+            background: white;
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .result-section.warning {
+            border-left-color: var(--warning);
+            background: #fffbf0;
+        }
+
+        .result-section.error {
+            border-left-color: var(--accent);
+            background: #ffe6e6;
+        }
+
+        .result-section.success {
+            border-left-color: var(--success);
+            background: #e8f8f5;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 1em;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .result-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .result-item {
+            padding: 10px;
+            background: var(--light-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .result-label {
+            font-size: 0.75em;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--primary);
+            word-break: break-word;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-indicator.pass {
+            background: var(--success);
+        }
+
+        .status-indicator.fail {
+            background: var(--accent);
+        }
+
+        .info-box {
+            padding: 10px;
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-top: 8px;
+            color: #1565c0;
+        }
+
+        .note {
+            padding: 10px;
+            background: #fff3cd;
+            border-left: 3px solid var(--warning);
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #856404;
+            margin-top: 8px;
+        }
+
+        .load-combination {
+            padding: 10px;
+            background: #f0f8ff;
+            border-left: 3px solid #2196F3;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #1565c0;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        .section-properties-display {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: #e8f5e9;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .section-properties-display.active {
+            display: block;
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .property-item {
+            padding: 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #c8e6c9;
+        }
+
+        .property-label {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.75em;
+        }
+
+        .property-value {
+            color: var(--secondary);
+            font-size: 0.9em;
+            margin-top: 2px;
+        }
+
+        .wind-load-box {
+            background: #fff3e0;
+            padding: 12px;
+            border-left: 4px solid #ff9800;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 1400px) {
+            .main-content {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .diagram-panel {
+                grid-column: 1 / -1;
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .section-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                max-height: none;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .auto-update-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>⚙️ Cold-Formed Metal Purlin Designer</h1>
+                <p>NSCP-Compliant Simply Supported Purlins with Sagrod Support</p>
+            </div>
+            <div class="header-buttons">
+                <button class="btn-pdf" onclick="exportPDF()">📄 Export PDF</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Panel: Geometry & Loads -->
+            <div class="section-panel">
+                <!-- Geometry -->
+                <div class="section">
+                    <div class="section-title">Geometry</div>
+                    
+                    <div class="form-group">
+                        <label for="spanLength">Purlin Span (L)</label>
+                        <div class="input-group">
+                            <input type="number" id="spanLength" value="9.14" min="0.5" step="0.1">
+                            <span class="unit-label">m</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="purlinSpacing">Purlin Spacing (s)</label>
+                        <div class="input-group">
+                            <input type="number" id="purlinSpacing" value="0.6" min="0.5" step="0.1">
+                            <span class="unit-label">m</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roofAngle">Roof Angle (θ)</label>
+                        <div class="input-group">
+                            <input type="number" id="roofAngle" value="4.71" min="0" max="90" step="0.1">
+                            <span class="unit-label">°</span>
+                        </div>
+                        <div class="info-box">Angle of roof slope relative to horizontal</div>
+                    </div>
+                </div>
+
+                <!-- Loads -->
+                <div class="section">
+                    <div class="section-title">Loads (on Roof Area)</div>
+                    
+                    <div class="form-group">
+                        <label for="deadLoadKPa">Dead Load</label>
+                        <div class="input-group">
+                            <input type="number" id="deadLoadKPa" value="1.38" min="0" step="0.01">
+                            <span class="unit-label">kPa</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="liveLoadKPa">Live Load</label>
+                        <div class="input-group">
+                            <input type="number" id="liveLoadKPa" value="1.0" min="0" step="0.01">
+                            <span class="unit-label">kPa</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Wind Load</label>
+                        <div class="wind-load-box">
+                            <label for="windLoadPos" style="font-size: 0.85em; margin-bottom: 4px;">Positive (Pressure)</label>
+                            <div class="input-group">
+                                <input type="number" id="windLoadPos" value="1.38" min="0" step="0.01">
+                                <span class="unit-label">kPa</span>
+                            </div>
+
+                            <label for="windLoadNeg" style="font-size: 0.85em; margin-bottom: 4px; margin-top: 10px;">Negative (Suction)</label>
+                            <div class="input-group">
+                                <input type="number" id="windLoadNeg" value="0.75" min="0" step="0.01">
+                                <span class="unit-label">kPa</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="load-combination">
+                        <strong>NSCP Load Cases:</strong><br>
+                        1.4D<br>
+                        1.2D + 1.6L/W<br>
+                        1.2D + 1.0L ± 1.6W
+                    </div>
+                </div>
+
+                <!-- Sagrod -->
+                <div class="section">
+                    <div class="section-title">Sagrod Support</div>
+                    
+                    <div class="form-group">
+                        <label for="sagrodType">Configuration</label>
+                        <select id="sagrodType">
+                            <option value="none">No Sagrod</option>
+                            <option value="midspan">At Midspan (L/2)</option>
+                            <option value="thirds">At Third Points (L/3, 2L/3)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Material -->
+                <div class="section">
+                    <div class="section-title">Material</div>
+                    
+                    <div class="form-group">
+                        <label for="steelGrade">Steel Grade</label>
+                        <select id="steelGrade">
+                            <option value="gr33" selected>Grade 33 (Gr33) - 230 MPa</option>
+                            <option value="gr50">Grade 50 (Gr50) - 350 MPa</option>
+                            <option value="gr70">Grade 70 (Gr70) - 450 MPa</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="safetyFactor">Capacity Reduction Factor (φ)</label>
+                        <input type="number" id="safetyFactor" value="0.90" min="0.5" max="1" step="0.05">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button type="button" class="btn-reset" onclick="resetForm()">Reset to Default</button>
+                </div>
+            </div>
+
+            <!-- Middle Panel: Section Properties -->
+            <div class="section-panel">
+                <div class="section">
+                    <div class="section-title">Section Properties <span class="auto-update-badge">AUTO UPDATE</span></div>
+                    
+                    <!-- Section Type Selection -->
+                    <div class="form-group">
+                        <label for="sectionType">Section Type</label>
+                        <select id="sectionType">
+                            <option value="custom-c">Custom C-Section</option>
+                            <option value="custom-tube">Custom Tubular Section</option>
+                            <option value="c100">C100 x 50 x 15 (Std)</option>
+                            <option value="c150">C150 x 50 x 15 (Std)</option>
+                            <option value="c200">C200 x 50 x 15 (Std)</option>
+                            <option value="lc200">LC200 x 75 x 20 x 2mm</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom C-Section Inputs -->
+                    <div id="customCInputs" class="form-group" style="display: none;">
+                        <label style="color: var(--secondary); font-weight: 700;">C-Section Dimensions</label>
+                        <div class="grid-4">
+                            <div>
+                                <label for="cHeight" style="font-size: 0.85em;">Height (h)</label>
+                                <input type="number" id="cHeight" value="200" min="1" step="1">
+                                <div style="font-size: 0.7em; color: #7f8c8d;">mm</div>
+                            </div>
+                            <div>
+                                <label for="cWidth" style="font-size: 0.85em;">Width (b)</label>
+                                <input type="number" id="cWidth" value="75" min="1" step="1">
+                                <div style="font-size: 0.7em; color: #7f8c8d;">mm</div>
+                            </div>
+                            <div>
+                                <label for="cLip" style="font-size: 0.85em;">Lip (c)</label>
+                                <input type="number" id="cLip" value="20" min="1" step="1">
+                                <div style="font-size: 0.7em; color: #7f8c8d;">mm</div>
+                            </div>
+                            <div>
+                                <label for="cThickness" style="font-size: 0.85em;">Thickness (t)</label>
+                                <input type="number" id="cThickness" value="2" min="0.5" step="0.1">
+                                <div style="font-size: 0.7em; color: #7f8c8d;">mm</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Tubular Section Inputs -->
+                    <div id="customTubeInputs" class="form-group" style="display: none;">
+                        <label style="color: var(--secondary); font-weight: 700;">Tubular Section Dimensions</label>
+                        <div class="grid-2">
+                            <div>
+                                <label for="tubeDepth" style="font-size: 0.85em;">Depth (h)</label>
+                                <input type="number" id="tubeDepth" value="100" min="1" step="1">
+                                <div style="font-size: 0.7em; color: #7f8c8d;">mm</div>
+                            </div>
+                            <div>
+                                <label for="tubeWidth" style="font-size: 0.85em;">Width (b)</label>
+                                <input type="number" id="tubeWidth" value="50" min="1" step="1">
+                                <div style="font-size: 0.7em; color: #7f8c8d;">mm</div>
+                            </div>
+                            <div>
+                                <label for="tubeThickness" style="font-size: 0.85em;">Thickness (t)</label>
+                                <input type="number" id="tubeThickness" value="1.5" min="0.5" step="0.1">
+                                <div style="font-size: 0.7em; color: #7f8c8d;">mm</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display computed properties -->
+                    <div id="computedPropertiesDisplay" class="section-properties-display">
+                        <div style="font-weight: 600; color: var(--primary); margin-bottom: 8px;">✓ Computed Section Properties</div>
+                        <div class="properties-grid">
+                            <div class="property-item">
+                                <div class="property-label">Ix (mm⁴)</div>
+                                <div class="property-value" id="dispIx">-</div>
+                            </div>
+                            <div class="property-item">
+                                <div class="property-label">Iy (mm⁴)</div>
+                                <div class="property-value" id="dispIy">-</div>
+                            </div>
+                            <div class="property-item">
+                                <div class="property-label">Sx (mm³)</div>
+                                <div class="property-value" id="dispSx">-</div>
+                            </div>
+                            <div class="property-item">
+                                <div class="property-label">Sy (mm³)</div>
+                                <div class="property-value" id="dispSy">-</div>
+                            </div>
+                            <div class="property-item">
+                                <div class="property-label">A (mm²)</div>
+                                <div class="property-value" id="dispArea">-</div>
+                            </div>
+                            <div class="property-item">
+                                <div class="property-label">ry (mm)</div>
+                                <div class="property-value" id="dispRy">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Standard sections fallback -->
+                    <div id="standardSectionProps" class="form-group">
+                        <label for="momentOfInertia">Ix (Moment of Inertia)</label>
+                        <div class="input-group">
+                            <input type="number" id="momentOfInertia" value="4667579" min="0.1" step="0.1">
+                            <span class="unit-label">mm⁴</span>
+                        </div>
+
+                        <label for="momentOfInertiaY" style="margin-top: 12px;">Iy (Moment of Inertia)</label>
+                        <div class="input-group">
+                            <input type="number" id="momentOfInertiaY" value="580380" min="0.1" step="0.1">
+                            <span class="unit-label">mm⁴</span>
+                        </div>
+
+                        <label for="sectionModulus" style="margin-top: 12px;">Sx (Elastic Section Modulus)</label>
+                        <div class="input-group">
+                            <input type="number" id="sectionModulus" value="46676" min="0.1" step="0.1">
+                            <span class="unit-label">mm³</span>
+                        </div>
+
+                        <label for="sectionModulusY" style="margin-top: 12px;">Sy (Elastic Section Modulus)</label>
+                        <div class="input-group">
+                            <input type="number" id="sectionModulusY" value="10995" min="0.1" step="0.1">
+                            <span class="unit-label">mm³</span>
+                        </div>
+
+                        <label for="area" style="margin-top: 12px;">Area (A)</label>
+                        <div class="input-group">
+                            <input type="number" id="area" value="3920" min="0.1" step="0.1">
+                            <span class="unit-label">mm²</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Diagram -->
+            <div class="diagram-panel">
+                <div class="diagram-container">
+                    <div class="diagram-title">Purlin Roof Structure</div>
+                    
+                    <!-- Roof Diagram -->
+                    <div class="roof-diagram">
+                        <div class="diagram-label">3D Roof Frame with Purlins</div>
+                        <svg width="100%" height="280" viewBox="0 0 500 280" style="max-width: 100%;">
+                            <!-- Rafter lines (main structure) -->
+                            <line x1="50" y1="220" x2="150" y2="60" stroke="#8b4513" stroke-width="6" stroke-linecap="round"/>
+                            <line x1="150" y1="60" x2="350" y2="60" stroke="#8b4513" stroke-width="6" stroke-linecap="round"/>
+                            <line x1="350" y1="60" x2="450" y2="220" stroke="#8b4513" stroke-width="6" stroke-linecap="round"/>
+                            
+                            <!-- Base line -->
+                            <line x1="50" y1="220" x2="450" y2="220" stroke="#8b4513" stroke-width="6" stroke-linecap="round"/>
+
+                            <!-- Purlins at angle -->
+                            <line x1="70" y1="200" x2="430" y2="100" stroke="var(--primary)" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="70" y1="165" x2="430" y2="65" stroke="var(--primary)" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="70" y1="130" x2="430" y2="30" stroke="var(--primary)" stroke-width="4" stroke-linecap="round"/>
+
+                            <!-- Purlin spacing indicators -->
+                            <line x1="65" y1="200" x2="65" y2="165" stroke="#666" stroke-width="1" stroke-dasharray="2,2"/>
+                            <text x="45" y="183" font-size="10" fill="#666" font-weight="600">s</text>
+
+                            <line x1="65" y1="165" x2="65" y2="130" stroke="#666" stroke-width="1" stroke-dasharray="2,2"/>
+                            <text x="45" y="148" font-size="10" fill="#666" font-weight="600">s</text>
+
+                            <!-- Span dimension -->
+                            <line x1="70" y1="225" x2="430" y2="225" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="250" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="var(--primary)">L (Span)</text>
+
+                            <!-- Load arrows -->
+                            <line x1="120" y1="140" x2="120" y2="190" stroke="var(--accent)" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+                            <line x1="180" y1="105" x2="180" y2="155" stroke="var(--accent)" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+                            <line x1="250" y1="75" x2="250" y2="125" stroke="var(--accent)" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+                            <line x1="320" y1="105" x2="320" y2="155" stroke="var(--accent)" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+                            <line x1="380" y1="140" x2="380" y2="190" stroke="var(--accent)" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+
+                            <!-- Load label -->
+                            <text x="465" y="160" font-size="11" font-weight="bold" fill="var(--accent)">w</text>
+
+                            <!-- Roof angle indicator -->
+                            <path d="M 400 220 Q 410 210 420 215" stroke="#f39c12" stroke-width="2" fill="none"/>
+                            <text x="400" y="235" font-size="10" fill="#f39c12" font-weight="600">θ</text>
+
+                            <!-- Support points -->
+                            <circle cx="70" cy="200" r="5" fill="var(--secondary)"/>
+                            <circle cx="430" cy="100" r="5" fill="var(--secondary)"/>
+
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                    <polygon points="0 0, 10 3, 0 6" fill="var(--accent)"/>
+                                </marker>
+                            </defs>
+                        </svg>
+                    </div>
+
+                    <!-- Section Detail Diagram -->
+                    <div class="section-diagram">
+                        <div class="diagram-label">Section Detail (C-Section Example)</div>
+                        <svg id="sectionSVG" width="100%" height="180" viewBox="0 0 400 180" style="max-width: 100%;">
+                            <!-- Outer dimensions -->
+                            <line x1="50" y1="30" x2="50" y2="130" stroke="#333" stroke-width="1.5"/>
+                            <line x1="50" y1="30" x2="200" y2="30" stroke="#333" stroke-width="1.5"/>
+
+                            <!-- Dimension lines -->
+                            <line x1="40" y1="30" x2="40" y2="130" stroke="#666" stroke-width="1" stroke-dasharray="2,2"/>
+                            <text x="25" y="85" text-anchor="middle" font-size="11" font-weight="600" fill="#333">d</text>
+
+                            <line x1="50" y1="140" x2="200" y2="140" stroke="#666" stroke-width="1" stroke-dasharray="2,2"/>
+                            <text x="125" y="155" text-anchor="middle" font-size="11" font-weight="600" fill="#333">b</text>
+
+                            <!-- C-Section profile - will be drawn dynamically -->
+                            <g id="cSectionProfile">
+                                <!-- Web -->
+                                <rect x="100" y="40" width="8" height="80" fill="var(--primary)" opacity="0.8"/>
+                                
+                                <!-- Top flange -->
+                                <rect x="100" y="40" width="50" height="8" fill="var(--primary)" opacity="0.8"/>
+                                
+                                <!-- Bottom flange -->
+                                <rect x="100" y="112" width="50" height="8" fill="var(--primary)" opacity="0.8"/>
+                                
+                                <!-- Top lip -->
+                                <rect x="150" y="35" width="8" height="13" fill="var(--primary)" opacity="0.8"/>
+                                
+                                <!-- Bottom lip -->
+                                <rect x="150" y="112" width="8" height="13" fill="var(--primary)" opacity="0.8"/>
+
+                                <!-- Thickness indicator -->
+                                <line x1="118" y1="50" x2="118" y2="60" stroke="#f39c12" stroke-width="1.5"/>
+                                <line x1="108" y1="50" x2="118" y2="50" stroke="#f39c12" stroke-width="1.5"/>
+                                <line x1="108" y1="60" x2="118" y2="60" stroke="#f39c12" stroke-width="1.5"/>
+                                <text x="95" y="58" font-size="9" fill="#f39c12" font-weight="600">t</text>
+
+                                <!-- Lip dimension -->
+                                <line x1="160" y1="25" x2="160" y2="35" stroke="#2196F3" stroke-width="1.5"/>
+                                <line x1="150" y1="25" x2="160" y2="25" stroke="#2196F3" stroke-width="1.5"/>
+                                <line x1="150" y1="35" x2="160" y2="35" stroke="#2196F3" stroke-width="1.5"/>
+                                <text x="165" y="30" font-size="9" fill="#2196F3" font-weight="600">c</text>
+                            </g>
+
+                            <!-- Title and specs -->
+                            <text x="200" y="50" font-size="11" font-weight="600" fill="var(--primary)">Section Properties:</text>
+                            <text x="200" y="68" font-size="10" fill="#333">Ix = <tspan font-weight="600" id="svgIx">-</tspan> mm⁴</text>
+                            <text x="200" y="85" font-size="10" fill="#333">Iy = <tspan font-weight="600" id="svgIy">-</tspan> mm⁴</text>
+                            <text x="200" y="102" font-size="10" fill="#333">A = <tspan font-weight="600" id="svgArea">-</tspan> mm²</text>
+                            <text x="200" y="119" font-size="10" fill="#333">Sx = <tspan font-weight="600" id="svgSx">-</tspan> mm³</text>
+                            <text x="200" y="136" font-size="10" fill="#333">Sy = <tspan font-weight="600" id="svgSy">-</tspan> mm³</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsPrintable" style="padding: 25px; background: #f8f9fa; border-top: 1px solid var(--border);">
+            <h2 style="color: var(--primary); margin-bottom: 20px; font-size: 1.2em;">📊 Design Results</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px;">
+                <!-- Design Loads -->
+                <div class="result-section">
+                    <div class="result-title">Design Load Cases</div>
+                    <div class="result-grid full">
+                        <div class="result-item">
+                            <div class="result-label">1.4D</div>
+                            <div class="result-value" id="resultLC1">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">1.2D + 1.6(L or W)</div>
+                            <div class="result-value" id="resultLC2">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">1.2D + 1.0L ± 1.6W</div>
+                            <div class="result-value" id="resultLC3">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label" style="color: var(--accent); font-weight: 700;">Governing (Strength)</div>
+                            <div class="result-value" id="resultGoverningLoad">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bending & Stress -->
+                <div class="result-section">
+                    <div class="result-title">Moment & Stress (Design Load)</div>
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-label">Max Moment (Mx)</div>
+                            <div class="result-value" id="resultMaxMoment">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Max Shear (Vx)</div>
+                            <div class="result-value" id="resultMaxShear">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Bending Stress</div>
+                            <div class="result-value" id="resultBendingStress">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Allowable (φFy)</div>
+                            <div class="result-value" id="resultAllowableStress">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deflection -->
+                <div class="result-section">
+                    <div class="result-title">Deflection (Service Load: D+L)</div>
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-label">Max Deflection</div>
+                            <div class="result-value" id="resultMaxDeflection">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Limit (L/150)</div>
+                            <div class="result-value" id="resultDeflectionLimit">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Actual Ratio</div>
+                            <div class="result-value" id="resultDeflectionRatio">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capacity Checks -->
+                <div class="result-section" id="capacitySection">
+                    <div class="result-title">Capacity Checks</div>
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-label">
+                                <span class="status-indicator" id="statusBending"></span>Bending Utilization
+                            </div>
+                            <div class="result-value" id="resultBendingCheck">-</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">
+                                <span class="status-indicator" id="statusDeflection"></span>Deflection Check
+                            </div>
+                            <div class="result-value" id="resultDeflectionCheck">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Steel grades
+        const steelGrades = {
+            gr33: { fy: 230, fu: 310, name: 'Gr33 - 230 MPa' },
+            gr50: { fy: 350, fu: 450, name: 'Gr50 - 350 MPa' },
+            gr70: { fy: 450, fu: 550, name: 'Gr70 - 450 MPa' }
+        };
+
+        // Standard sections (in mm⁴ and mm³)
+        const standardSections = {
+            c100: { ix: 352000, iy: 85000, sx: 7040, sy: 3400, area: 865 },
+            c150: { ix: 1042000, iy: 125000, sx: 13900, sy: 5000, area: 1320 },
+            c200: { ix: 2515000, iy: 182000, sx: 25150, sy: 7300, area: 1890 },
+            lc200: { ix: 4667579, iy: 580380, sx: 46676, sy: 10995, area: 3920 }
+        };
+
+        // Debounce function for performance
+        function debounce(func, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func(...args), delay);
+            };
+        }
+
+        // Auto-update on input change
+        const autoUpdate = debounce(() => {
+            updateSectionAndCalculate();
+        }, 300);
+
+        // Add event listeners to all inputs
+        document.querySelectorAll('input[type="number"], input[type="text"], select').forEach(input => {
+            input.addEventListener('input', autoUpdate);
+            input.addEventListener('change', autoUpdate);
+        });
+
+        // Section type change
+        document.getElementById('sectionType').addEventListener('change', (e) => {
+            const type = e.target.value;
+            const customC = document.getElementById('customCInputs');
+            const customTube = document.getElementById('customTubeInputs');
+            const standard = document.getElementById('standardSectionProps');
+
+            customC.style.display = 'none';
+            customTube.style.display = 'none';
+            standard.style.display = 'block';
+
+            if (type === 'custom-c') {
+                customC.style.display = 'block';
+                standard.style.display = 'none';
+            } else if (type === 'custom-tube') {
+                customTube.style.display = 'block';
+                standard.style.display = 'none';
+            } else if (standardSections[type]) {
+                const section = standardSections[type];
+                document.getElementById('momentOfInertia').value = section.ix;
+                document.getElementById('momentOfInertiaY').value = section.iy;
+                document.getElementById('sectionModulus').value = section.sx;
+                document.getElementById('sectionModulusY').value = section.sy;
+                document.getElementById('area').value = section.area;
+            }
+            
+            autoUpdate();
+        });
+
+        // Compute and update section and calculations
+        function updateSectionAndCalculate() {
+            const sectionType = document.getElementById('sectionType').value;
+
+            if (sectionType === 'custom-c') {
+                computeCProperties();
+            } else if (sectionType === 'custom-tube') {
+                computeTubeProperties();
+            } else {
+                updateSVGDisplay();
+            }
+
+            calculate();
+        }
+
+        // Compute C-Section Properties
+        function computeCProperties() {
+            const h = parseFloat(document.getElementById('cHeight').value);
+            const b = parseFloat(document.getElementById('cWidth').value);
+            const c = parseFloat(document.getElementById('cLip').value);
+            const t = parseFloat(document.getElementById('cThickness').value);
+
+            const aWeb = (h - 2*t) * t;
+            const aFlange = (b - t) * t;
+            const aLip = (c - t) * t;
+            const totalArea = aWeb + 2*aFlange + 2*aLip;
+
+            const yBar = ((h/2) * aWeb + (h - t/2) * 2*aFlange + (h - t - c/2) * 2*aLip) / (aWeb + 2*aFlange + 2*aLip);
+            const xBar = (b/2) * 2*(aFlange + aLip) / (aWeb + 2*aFlange + 2*aLip);
+
+            const iWebX = (t * Math.pow(h - 2*t, 3)) / 12 + aWeb * Math.pow(h/2 - yBar, 2);
+            const iFlangeX = 2 * ((t * Math.pow(b - t, 3)) / 12 + (b - t) * t * Math.pow(h - t/2 - yBar, 2));
+            const iLipX = 2 * ((t * Math.pow(c - t, 3)) / 12 + (c - t) * t * Math.pow(h - t - c/2 - yBar, 2));
+            const Ix = iWebX + iFlangeX + iLipX;
+
+            const iWebY = (h - 2*t) * Math.pow(t, 3) / 12;
+            const iFlangeY = 2 * (Math.pow(b - t, 3) * t / 12 + (b - t) * t * Math.pow(b/2 - xBar, 2));
+            const iLipY = 2 * ((c - t) * Math.pow(t, 3) / 12 + (c - t) * t * Math.pow(b - t + (c-t)/2 - xBar, 2));
+            const Iy = iWebY + iFlangeY + iLipY;
+
+            const yTop = h - yBar;
+            const Sx = Ix / (yTop / 2);
+            const Sy = Iy / (xBar / 2);
+            const ry = Math.sqrt(Iy / totalArea);
+
+            updateSectionProperties(Ix, Iy, Sx, Sy, Sx, Sy, totalArea, ry, h, b, c, t);
+        }
+
+        // Compute Tubular Section Properties
+        function computeTubeProperties() {
+            const h = parseFloat(document.getElementById('tubeDepth').value);
+            const b = parseFloat(document.getElementById('tubeWidth').value);
+            const t = parseFloat(document.getElementById('tubeThickness').value);
+
+            const aOuter = h * b;
+            const aInner = (h - 2*t) * (b - 2*t);
+            const totalArea = aOuter - aInner;
+
+            const IxOuter = (b * Math.pow(h, 3)) / 12;
+            const IxInner = ((b - 2*t) * Math.pow(h - 2*t, 3)) / 12;
+            const Ix = IxOuter - IxInner;
+
+            const IyOuter = (h * Math.pow(b, 3)) / 12;
+            const IyInner = ((h - 2*t) * Math.pow(b - 2*t, 3)) / 12;
+            const Iy = IyOuter - IyInner;
+
+            const Sx = Ix / (h / 2);
+            const Sy = Iy / (b / 2);
+            const ry = Math.sqrt(Iy / totalArea);
+
+            updateSectionProperties(Ix, Iy, Sx, Sy, Sx, Sy, totalArea, ry, h, b, 0, t);
+        }
+
+        function updateSectionProperties(Ix, Iy, Zx, Zy, Sx, Sy, area, ry, h, b, c, t) {
+            document.getElementById('dispIx').textContent = Ix.toFixed(0);
+            document.getElementById('dispIy').textContent = Iy.toFixed(0);
+            document.getElementById('dispSx').textContent = Sx.toFixed(0);
+            document.getElementById('dispSy').textContent = Sy.toFixed(0);
+            document.getElementById('dispArea').textContent = area.toFixed(0);
+            document.getElementById('dispRy').textContent = ry.toFixed(2);
+
+            document.getElementById('computedPropertiesDisplay').classList.add('active');
+
+            document.getElementById('momentOfInertia').value = Ix.toFixed(0);
+            document.getElementById('momentOfInertiaY').value = Iy.toFixed(0);
+            document.getElementById('sectionModulus').value = Sx.toFixed(0);
+            document.getElementById('sectionModulusY').value = Sy.toFixed(0);
+            document.getElementById('area').value = area.toFixed(0);
+
+            updateSVGDisplay(h, b, c, t, Ix, Iy, Sx, Sy, area);
+        }
+
+        function updateSVGDisplay(h, b, c, t, Ix, Iy, Sx, Sy, area) {
+            // Update SVG properties display
+            if (Ix !== undefined) {
+                document.getElementById('svgIx').textContent = Ix.toFixed(0);
+                document.getElementById('svgIy').textContent = Iy.toFixed(0);
+                document.getElementById('svgArea').textContent = area.toFixed(0);
+                document.getElementById('svgSx').textContent = Sx.toFixed(0);
+                document.getElementById('svgSy').textContent = Sy.toFixed(0);
+            }
+
+            // Draw C-section profile if custom
+            if (h !== undefined && b !== undefined && t !== undefined) {
+                drawCSection(h, b, c, t);
+            }
+        }
+
+        function drawCSection(h, b, c, t) {
+            const profile = document.getElementById('cSectionProfile');
+            const scale = 60 / h; // Scale to fit in SVG
+            const offsetX = 50;
+            const offsetY = 30;
+
+            // Clear previous
+            profile.innerHTML = '';
+
+            // Web
+            const webX = offsetX + (b - t) * scale;
+            const webHeight = (h - 2*t) * scale;
+            const webY = offsetY + t * scale;
+            profile.innerHTML += `<rect x="${webX}" y="${webY}" width="${t * scale}" height="${webHeight}" fill="var(--primary)" opacity="0.8"/>`;
+
+            // Top flange
+            profile.innerHTML += `<rect x="${offsetX}" y="${offsetY}" width="${b * scale}" height="${t * scale}" fill="var(--primary)" opacity="0.8"/>`;
+
+            // Bottom flange
+            const bottomFlangeY = offsetY + (h - t) * scale;
+            profile.innerHTML += `<rect x="${offsetX}" y="${bottomFlangeY}" width="${b * scale}" height="${t * scale}" fill="var(--primary)" opacity="0.8"/>`;
+
+            // Top lip
+            if (c > 0) {
+                profile.innerHTML += `<rect x="${offsetX + b * scale}" y="${offsetY}" width="${t * scale}" height="${c * scale}" fill="var(--primary)" opacity="0.8"/>`;
+            }
+
+            // Bottom lip
+            if (c > 0) {
+                profile.innerHTML += `<rect x="${offsetX + b * scale}" y="${bottomFlangeY}" width="${t * scale}" height="${c * scale}" fill="var(--primary)" opacity="0.8"/>`;
+            }
+
+            // Dimension lines and labels
+            profile.innerHTML += `<line x1="${offsetX - 10}" y1="${offsetY}" x2="${offsetX - 10}" y2="${offsetY + h * scale}" stroke="#666" stroke-width="1" stroke-dasharray="2,2"/>`;
+            profile.innerHTML += `<text x="${offsetX - 25}" y="${offsetY + h * scale / 2}" text-anchor="middle" font-size="9" fill="#333">h</text>`;
+
+            profile.innerHTML += `<line x1="${offsetX}" y1="${offsetY + h * scale + 10}" x2="${offsetX + b * scale}" y2="${offsetY + h * scale + 10}" stroke="#666" stroke-width="1" stroke-dasharray="2,2"/>`;
+            profile.innerHTML += `<text x="${offsetX + b * scale / 2}" y="${offsetY + h * scale + 25}" text-anchor="middle" font-size="9" fill="#333">b</text>`;
+
+            // Thickness indicator
+            const thickX = offsetX + (b - t/2) * scale;
+            const thickY = offsetY + t * scale + 10;
+            profile.innerHTML += `<line x1="${thickX}" y1="${thickY}" x2="${thickX}" y2="${thickY + 10}" stroke="#f39c12" stroke-width="1.5"/>`;
+            profile.innerHTML += `<line x1="${thickX - t * scale / 2}" y1="${thickY}" x2="${thickX}" y2="${thickY}" stroke="#f39c12" stroke-width="1.5"/>`;
+            profile.innerHTML += `<line x1="${thickX - t * scale / 2}" y1="${thickY + 10}" x2="${thickX}" y2="${thickY + 10}" stroke="#f39c12" stroke-width="1.5"/>`;
+            profile.innerHTML += `<text x="${thickX - 15}" y="${thickY + 20}" font-size="8" fill="#f39c12">t</text>`;
+
+            // Lip dimension if present
+            if (c > 0) {
+                const lipX = offsetX + b * scale + t * scale / 2;
+                const lipY = offsetY - 10;
+                profile.innerHTML += `<line x1="${lipX}" y1="${lipY}" x2="${lipX}" y2="${offsetY}" stroke="#2196F3" stroke-width="1.5"/>`;
+                profile.innerHTML += `<line x1="${offsetX + b * scale}" y1="${lipY}" x2="${lipX}" y2="${lipY}" stroke="#2196F3" stroke-width="1.5"/>`;
+                profile.innerHTML += `<line x1="${offsetX + b * scale}" y1="${offsetY}" x2="${lipX}" y2="${offsetY}" stroke="#2196F3" stroke-width="1.5"/>`;
+                profile.innerHTML += `<text x="${lipX + 15}" y="${lipY + 5}" font-size="8" fill="#2196F3">c</text>`;
+            }
+        }
+
+        // Main calculation function
+        function calculate() {
+            const L = parseFloat(document.getElementById('spanLength').value);
+            const spacing = parseFloat(document.getElementById('purlinSpacing').value);
+            const roofAngle = parseFloat(document.getElementById('roofAngle').value) * Math.PI / 180;
+            const dLoadKPa = parseFloat(document.getElementById('deadLoadKPa').value);
+            const lLoadKPa = parseFloat(document.getElementById('liveLoadKPa').value);
+            const windPos = parseFloat(document.getElementById('windLoadPos').value);
+            const windNeg = parseFloat(document.getElementById('windLoadNeg').value);
+            const sagrodType = document.getElementById('sagrodType').value;
+            
+            const ix = parseFloat(document.getElementById('momentOfInertia').value) * 1e-12; // mm⁴ to m⁴
+            const sx = parseFloat(document.getElementById('sectionModulus').value) * 1e-9; // mm³ to m³
+            const area = parseFloat(document.getElementById('area').value) * 1e-6; // mm² to m²
+            
+            const gradeKey = document.getElementById('steelGrade').value;
+            const steelProps = steelGrades[gradeKey];
+            const phiFactor = parseFloat(document.getElementById('safetyFactor').value);
+            
+            const E = 200000; // MPa
+
+            const dLoad = dLoadKPa * spacing;
+            const lLoad = lLoadKPa * spacing;
+            const wLoadPos = windPos * spacing;
+            const wLoadNeg = windNeg * spacing;
+
+            const lc1 = 1.4 * dLoad;
+            const lc2a = 1.2 * dLoad + 1.6 * lLoad;
+            const lc2b = 1.2 * dLoad + 1.6 * Math.max(wLoadPos, wLoadNeg);
+            const lc2 = Math.max(lc2a, lc2b);
+            const lc3a = 1.2 * dLoad + 1.0 * lLoad + 1.6 * wLoadPos;
+            const lc3b = 1.2 * dLoad + 1.0 * lLoad - 1.6 * wLoadNeg;
+            const lc3 = Math.max(Math.abs(lc3a), Math.abs(lc3b));
+
+            const govLoad = Math.max(lc1, lc2, lc3);
+            const serviceLoad = dLoad + lLoad;
+
+            let sagrodReduction = 1.0;
+            let sagrodNote = 'None';
+            if (sagrodType === 'midspan') {
+                sagrodReduction = 0.90;
+                sagrodNote = 'Midspan (-10%)';
+            } else if (sagrodType === 'thirds') {
+                sagrodReduction = 0.85;
+                sagrodNote = 'Third Points (-15%)';
+            }
+
+            const maxMoment = (govLoad * Math.pow(L, 2) / 8) * sagrodReduction;
+            const maxShear = (govLoad * L / 2);
+            const maxDeflection = (5 * serviceLoad * Math.pow(L, 4) / (384 * E * ix)) * sagrodReduction;
+            const deflectionLimit = L / 150;
+
+            const bendingStress = (maxMoment * 1e9) / (sx * 1e9);
+            const allowableStress = phiFactor * steelProps.fy;
+            const bendingUtilization = bendingStress / allowableStress;
+            const deflectionUtilization = maxDeflection / deflectionLimit;
+
+            displayResults({
+                lc1: lc1,
+                lc2: lc2,
+                lc3: lc3,
+                govLoad: govLoad,
+                serviceLoad: serviceLoad,
+                sagrodNote: sagrodNote,
+                maxMoment: maxMoment,
+                maxShear: maxShear,
+                bendingStress: bendingStress,
+                allowableStress: allowableStress,
+                maxDeflection: maxDeflection,
+                deflectionLimit: deflectionLimit,
+                bendingUtilization: bendingUtilization,
+                deflectionUtilization: deflectionUtilization
+            });
+        }
+
+        function displayResults(results) {
+            document.getElementById('resultLC1').textContent = results.lc1.toFixed(3) + ' kN/m';
+            document.getElementById('resultLC2').textContent = results.lc2.toFixed(3) + ' kN/m';
+            document.getElementById('resultLC3').textContent = results.lc3.toFixed(3) + ' kN/m';
+            document.getElementById('resultGoverningLoad').textContent = results.govLoad.toFixed(3) + ' kN/m';
+
+            document.getElementById('resultMaxMoment').textContent = results.maxMoment.toFixed(2) + ' kN⋅m';
+            document.getElementById('resultMaxShear').textContent = results.maxShear.toFixed(2) + ' kN';
+            document.getElementById('resultBendingStress').textContent = results.bendingStress.toFixed(1) + ' MPa';
+            document.getElementById('resultAllowableStress').textContent = results.allowableStress.toFixed(1) + ' MPa';
+
+            document.getElementById('resultMaxDeflection').textContent = (results.maxDeflection * 1000).toFixed(1) + ' mm';
+            document.getElementById('resultDeflectionLimit').textContent = (results.deflectionLimit * 1000).toFixed(1) + ' mm';
+            document.getElementById('resultDeflectionRatio').textContent = (results.maxDeflection / results.deflectionLimit).toFixed(2);
+
+            const bendingPass = results.bendingUtilization <= 1.0;
+            const deflectionPass = results.deflectionUtilization <= 1.0;
+
+            updateCapacityIndicator('statusBending', bendingPass);
+            document.getElementById('resultBendingCheck').textContent = (results.bendingUtilization * 100).toFixed(1) + '%';
+
+            updateCapacityIndicator('statusDeflection', deflectionPass);
+            document.getElementById('resultDeflectionCheck').textContent = (results.deflectionUtilization * 100).toFixed(1) + '%';
+
+            const capacitySection = document.getElementById('capacitySection');
+            capacitySection.classList.remove('warning', 'error', 'success');
+            if (bendingPass && deflectionPass) {
+                capacitySection.classList.add('success');
+            } else if (results.bendingUtilization > 1.1 || results.deflectionUtilization > 1.1) {
+                capacitySection.classList.add('error');
+            } else {
+                capacitySection.classList.add('warning');
+            }
+        }
+
+        function updateCapacityIndicator(elementId, pass) {
+            const element = document.getElementById(elementId);
+            element.className = 'status-indicator';
+            element.classList.add(pass ? 'pass' : 'fail');
+        }
+
+        function resetForm() {
+            // Reset geometry
+            document.getElementById('spanLength').value = '9.14';
+            document.getElementById('purlinSpacing').value = '0.6';
+            document.getElementById('roofAngle').value = '4.71';
+            
+            // Reset loads
+            document.getElementById('deadLoadKPa').value = '1.38';
+            document.getElementById('liveLoadKPa').value = '1.0';
+            document.getElementById('windLoadPos').value = '1.38';
+            document.getElementById('windLoadNeg').value = '0.75';
+            
+            // Reset section
+            document.getElementById('sectionType').value = 'lc200';
+            document.getElementById('momentOfInertia').value = '4667579';
+            document.getElementById('momentOfInertiaY').value = '580380';
+            document.getElementById('sectionModulus').value = '46676';
+            document.getElementById('sectionModulusY').value = '10995';
+            document.getElementById('area').value = '3920';
+            
+            // Reset material
+            document.getElementById('steelGrade').value = 'gr33';
+            document.getElementById('safetyFactor').value = '0.90';
+            
+            // Reset sagrod
+            document.getElementById('sagrodType').value = 'none';
+
+            autoUpdate();
+        }
+
+        function exportPDF() {
+            const element = document.querySelector('.container');
+            const opt = {
+                margin: 10,
+                filename: 'Purlin_Design_Report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Initial calculation on load
+        window.addEventListener('load', () => {
+            updateSectionAndCalculate();
+        });
+    </script>
+</body>
+</html>
